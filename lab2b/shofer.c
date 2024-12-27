@@ -255,6 +255,13 @@ static int shofer_open_read(struct inode *inode, struct file *filp)
 static int shofer_open_write(struct inode *inode, struct file *filp)
 {
 	/* todo (similar to shofer_open_read) */
+    struct shofer_dev *shofer;
+
+	shofer = container_of(inode->i_cdev, struct shofer_dev, cdev);
+	filp->private_data = shofer;
+
+	if ( (filp->f_flags & O_ACCMODE) != O_WRONLY)
+		return -EPERM;
 
 	return 0;
 }
@@ -271,7 +278,7 @@ static ssize_t shofer_read(struct file *filp, char __user *ubuf, size_t count,
 
 	spin_lock(&out_buff->key);
 
-	dump_buffer("out_dev-end:out_buff:", out_buff);
+	dump_buffer("out_dev-start:out_buff:", out_buff);
 
 	retval = kfifo_to_user(fifo, (char __user *) ubuf, count, &copied);
 	if (retval)
@@ -291,21 +298,44 @@ static ssize_t shofer_write(struct file *filp, const char __user *ubuf,
 	size_t count, loff_t *f_pos)
 {
 	/* todo (similar to read) */
+    ssize_t retval = 0;
+	struct shofer_dev *shofer = filp->private_data;
+	struct buffer *in_buff = shofer->in_buff;
+	struct kfifo *fifo = &in_buff->fifo;
+	unsigned int copied;
 
-	return count;
+	spin_lock(&in_buff->key);
+
+	dump_buffer("in_dev-start:in_buff:", in_buff);
+
+	retval = kfifo_from_user(fifo, (char __user *) ubuf, count, &copied);
+	if (retval)
+		klog(KERN_WARNING, "kfifo_from_user failed");
+	else
+		retval = copied;
+
+	dump_buffer("in_dev-end:in_buff:", in_buff);
+
+	spin_unlock(&in_buff->key);
+
+	return retval;
 }
 
 static long control_ioctl (struct file *filp, unsigned int request, unsigned long arg)
 {
 	ssize_t retval = 0;
-	/*struct shofer_dev *shofer = filp->private_data;
+
+	struct shofer_dev *shofer = filp->private_data;
 	struct buffer *in_buff = shofer->in_buff;
 	struct buffer *out_buff = shofer->out_buff;
 	struct kfifo *fifo_in = &in_buff->fifo;
 	struct kfifo *fifo_out = &out_buff->fifo;
 	char c;
-	int got;*/
+	int got;
+
 	struct shofer_ioctl cmd;
+
+	klog(KERN_NOTICE, "IN IOCTL control");
 
 	if (_IOC_TYPE(request) != SHOFER_IOCTL_TYPE || _IOC_NR(request) != SHOFER_IOCTL_NR) {
 		klog(KERN_WARNING, "IOC type and/or nr don't match");
@@ -330,6 +360,37 @@ static long control_ioctl (struct file *filp, unsigned int request, unsigned lon
 
 	/* copy cmd.count bytes from in_buff to out_buff */
 	/* todo (similar to timer) */
+    /* get locks on both buffers */
+	spin_lock(&out_buff->key);
+	spin_lock(&in_buff->key);
+
+	dump_buffer("ioctl-start:in_buff", in_buff);
+	dump_buffer("ioctl-start:out_buff", out_buff);
+
+	if (kfifo_len(fifo_in) > 0 && kfifo_avail(fifo_out) > 0) {
+        while(cmd.count > 0)
+		{
+            got = kfifo_get(fifo_in, &c);
+            if (got > 0) {
+                got = kfifo_put(fifo_out, c);
+                if (got)
+                    LOG("ioctl moved '%c' from in to out", c);
+                else /* should't happen! */
+                    klog(KERN_WARNING, "kfifo_put failed");
+            }
+            else { /* should't happen! */
+                klog(KERN_WARNING, "kfifo_get failed");
+            }
+            cmd.count--;
+			klog(KERN_NOTICE, "cmd.count: %d\n", cmd.count);
+        }
+	}
+
+	dump_buffer("ioctl-end:in_buff", in_buff);
+	dump_buffer("ioctl-end:out_buff", out_buff);
+
+	spin_unlock(&in_buff->key);
+	spin_unlock(&out_buff->key);
 
 	return retval;
 }
