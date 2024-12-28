@@ -73,7 +73,7 @@ static int __init shofer_module_init(void)
 	klog(KERN_NOTICE, "Module started initialization");
 
 	/* get device number(s) */
-	/*retval = alloc_chrdev_region(&dev_no, 0, 1, DRIVER_NAME);
+	retval = alloc_chrdev_region(&dev_no, 0, 1, DRIVER_NAME);
 	if (retval < 0) {
 		klog(KERN_WARNING, "Can't get major device number");
 		return retval;
