@@ -52,7 +52,7 @@ static int shofer_open(struct inode *, struct file *);
 static int shofer_release(struct inode *inode, struct file *filp);
 static ssize_t shofer_read(struct file *, char __user *, size_t, loff_t *);
 static ssize_t shofer_write(struct file *, const char __user *, size_t, loff_t *);
-int pipe_init(struct pipe *pipe, size_t pipe_size, size_t max_threads);
+int pipe_init(struct pipe **pipe, size_t pipe_size, size_t max_threads);
 static void pipe_delete(struct pipe *pipe);
 
 static struct file_operations shofer_fops = {
@@ -81,7 +81,7 @@ static int __init shofer_module_init(void)
 	Dev_no = dev_no; //remember first
 
     /* initialize the pipe */
-	if (pipe_init(shofer->pipe, pipe_size, max_threads)) {
+	if (pipe_init(&shofer->pipe, pipe_size, max_threads)) {
 		kfree(shofer);
 		klog(KERN_ERR, "Cant init pipe");
 		return -1;
@@ -198,7 +198,7 @@ static void simulate_delay(long delay_ms)
 		msecs_to_jiffies(delay_ms));
 }
 
-int pipe_init(struct pipe *pipe, size_t pipe_size, size_t max_threads)
+int pipe_init(struct pipe **pipe, size_t pipe_size, size_t max_threads)
 {
 	int ret;
 	ret = kfifo_alloc(&pipe->fifo, pipe_size, GFP_KERNEL);
