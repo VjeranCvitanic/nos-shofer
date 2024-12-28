@@ -55,6 +55,7 @@ static void dump_buffer(char *, struct shofer_dev *, struct pipe *);
 static void simulate_delay(long delay_ms);
 
 static int shofer_open(struct inode *, struct file *);
+static int shofer_release(struct inode *inode, struct file *filp);
 static ssize_t shofer_read(struct file *, char __user *, size_t, loff_t *);
 static ssize_t shofer_write(struct file *, const char __user *, size_t, loff_t *);
 int pipe_init(struct pipe *pipe, size_t pipe_size, size_t max_threads);
@@ -65,14 +66,13 @@ static struct file_operations shofer_fops = {
 	.open =     shofer_open,
 	.read =     shofer_read,
 	.write =    shofer_write,
-	.close = 	shofer_release
+	.release = 	shofer_release
 };
 
 /* init module */
 static int __init shofer_module_init(void)
 {
 	int retval, i;
-	struct pipe *pipe;
 	struct shofer_dev *shofer;
 	dev_t dev_no = 0;
 
@@ -87,7 +87,7 @@ static int __init shofer_module_init(void)
 	Dev_no = dev_no; //remember first
 
     /* initialize the pipe */
-	if (pipe_init(&shofer->pipe, pipe_size, max_threads)) {
+	if (pipe_init(shofer->pipe, pipe_size, max_threads)) {
 		kfree(shofer);
 		klog(KERN_ERR, "Cant init pipe");
 		return -1;
@@ -175,10 +175,10 @@ static int shofer_open(struct inode *inode, struct file *filp)
 	struct shofer_dev *shofer;
     shofer = container_of(inode->i_cdev, struct shofer_dev, cdev);
 
-	if (shofer->pipe.thread_cnt >= shofer->pipe.max_threads)
+	if (shofer->pipe->thread_cnt >= shofer->pipe->max_threads)
 		return -EBUSY;
 
-	shofer->pipe.thread_cnt++;
+	shofer->pipe->thread_cnt++;
 
 	filp->private_data = shofer;
 
@@ -242,7 +242,7 @@ static void pipe_delete(struct pipe *pipe)
 static int shofer_release(struct inode *inode, struct file *filp)
 {
 	struct shofer_dev *shofer = filp->private_data;
-	shofer->pipe.thread_cnt--;
+	shofer->pipe->thread_cnt--;
 
 	return 0;
 }
@@ -253,8 +253,9 @@ static ssize_t shofer_read(struct file *filp, char __user *ubuf, size_t count,
 {
 	ssize_t retval = 0;
 	struct shofer_dev *shofer = filp->private_data;
-	struct pipe *pipe = &shofer->pipe;
+	struct pipe *pipe = shofer->pipe;
 	struct kfifo *fifo = &pipe->fifo;
+	unsigned int copied;
  
 	if (!( (filp->f_flags & O_ACCMODE) & O_RDONLY))
 	{
@@ -287,7 +288,13 @@ static ssize_t shofer_read(struct file *filp, char __user *ubuf, size_t count,
 	dump_buffer("read-start", shofer, pipe);
 
 	retval = kfifo_to_user(fifo, (char __user *) ubuf, count, &copied);
-	LOG("Read %d bytes\n", retval);
+	if (retval)
+		klog(KERN_WARNING, "kfifo_to_user failed");
+	else
+		retval = copied;
+	LOG("Read %ld bytes\n", retval);
+
+	simulate_delay(1000);
 
 	dump_buffer("read-end", shofer, pipe);
 
@@ -307,8 +314,10 @@ static ssize_t shofer_write(struct file *filp, const char __user *ubuf,
  	size_t count, loff_t *f_pos /* ignoring f_pos */)
 {
 	ssize_t retval = 0;
-	struct pipe *pipe = &shofer->pipe;
+	struct shofer_dev *shofer = filp->private_data;
+	struct pipe *pipe = shofer->pipe;
 	struct kfifo *fifo = &pipe->fifo;
+	unsigned int copied;
  
 	if (!((filp->f_flags & O_ACCMODE) & O_WRONLY))
 	{
@@ -343,7 +352,13 @@ static ssize_t shofer_write(struct file *filp, const char __user *ubuf,
 	dump_buffer("write-start", shofer, pipe);
 
 	retval = kfifo_from_user(fifo, (char __user *) ubuf, count, &copied);
-	LOG("Wrote %d bytes\n", retval);
+	if (retval)
+		klog(KERN_WARNING, "kfifo_from_user failed");
+	else
+		retval = copied;
+	LOG("Wrote %ld bytes\n", retval);
+
+	simulate_delay(1000);
 
 	dump_buffer("write-end", shofer, pipe);
 
