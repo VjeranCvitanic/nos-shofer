@@ -5,10 +5,19 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
+#include <signal.h>
 
 
 #define CIJEV	"/dev/shofer"
 #define MAXSZ	16
+
+void my_signal_handler(int sig)
+{
+	printf("Closing fd\n");
+	close(CIJEV);
+	printf("EXITING");
+	exit(0);
+}
 
 int main(int argc, char *argv[])
 {
@@ -17,7 +26,18 @@ int main(int argc, char *argv[])
 	size_t size;
 	long pid = (long) getpid();
 
-	fp = open(CIJEV, O_RDONLY);
+	struct sigaction sa = {{0}};
+    sa.sa_handler = &my_signal_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+
+    if (sigaction(SIGINT, &sa, NULL) != 0)
+    {
+        fprintf(stderr, "sigaction error\n");
+        return -1;
+    }
+
+	fp = open(CIJEV, O_RDONLY | O_NONBLOCK);
 	if (fp == -1) {
 		perror("Nisam otvorio cjevovod! Greska: ");
 		return -1;
