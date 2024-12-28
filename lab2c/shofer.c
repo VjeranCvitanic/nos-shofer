@@ -87,12 +87,12 @@ static int __init shofer_module_init(void)
 	list_add_tail(&shofer->list, &shofers_list);
 	dev_no = MKDEV(MAJOR(dev_no), MINOR(dev_no) + 1);
 
-	/* initialize the pipe */
-	if (pipe_init(shofer->pipe, pipe_size, max_threads)) {
+	/* initialize the pipe 
+	if (pipe_init(&shofer->pipe, pipe_size, max_threads)) {
 		kfree(shofer);
 		klog(KERN_ERR, "Cant init pipe");
 		return -1;
-	}
+	}*/
 
 	klog(KERN_NOTICE, "Module initialized with major=%d", MAJOR(dev_no));
 
