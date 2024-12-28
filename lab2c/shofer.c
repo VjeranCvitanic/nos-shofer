@@ -226,6 +226,13 @@ int pipe_init(struct pipe *pipe, size_t pipe_size, size_t max_threads)
 static void pipe_delete(struct pipe *pipe)
 {
 	//todo - obrisi sve poruke ako ih ima
+    char buffer[PIPE_SIZE];  // Adjust buffer size as needed
+    size_t len;
+
+    while (kfifo_len(&pipe->fifo) > 0) {
+        len = kfifo_out(&pipe->fifo, buffer, sizeof(buffer));
+        LOG("Drained %zu bytes: %s\n", len, buffer);
+    }
 	kfifo_free(&pipe->fifo);
 }
  
@@ -279,7 +286,6 @@ static ssize_t shofer_read(struct file *filp, char __user *ubuf, size_t count,
 		else break;
 	}
 
-	// TODO - jel triba citat tu negdi
 	dump_buffer("read-start", shofer, pipe);
 
 	retval = kfifo_to_user(fifo, (char __user *) ubuf, count, &copied);
@@ -345,7 +351,7 @@ static ssize_t shofer_write(struct file *filp, const char __user *ubuf,
 		}
 		else break;
     }
-	// TODO - jel triba pisat
+
 	dump_buffer("write-start", shofer, pipe);
 
 	retval = kfifo_from_user(fifo, (char __user *) ubuf, count, &copied);
