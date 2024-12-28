@@ -21,8 +21,6 @@
 #define PIPE_SIZE		64
 #define MAX_THREADS		5
 
-#define SHOFER_DEBUG
-
 struct pipe {
 	size_t pipe_size;
 	size_t max_threads;
