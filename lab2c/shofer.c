@@ -140,7 +140,7 @@ static struct shofer_dev *shofer_create(dev_t dev_no,
 		return NULL;
 	}
 	memset(shofer, 0, sizeof(struct shofer_dev));
-	shofer->pipe = pipe;
+	(void)pipe;
 
 	cdev_init(&shofer->cdev, fops);
 	shofer->cdev.owner = THIS_MODULE;
