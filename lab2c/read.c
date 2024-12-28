@@ -11,17 +11,18 @@
 #define CIJEV	"/dev/shofer"
 #define MAXSZ	16
 
+int fp;
+
 void my_signal_handler(int sig)
 {
 	printf("Closing fd\n");
-	close(CIJEV);
+	close(fp);
 	printf("EXITING");
 	exit(0);
 }
 
 int main(int argc, char *argv[])
 {
-	int fp;
 	char buffer[MAXSZ];
 	size_t size;
 	long pid = (long) getpid();
