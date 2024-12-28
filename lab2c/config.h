@@ -16,8 +16,6 @@
 #define AUTHOR		"Leonardo Jelenkovic"
 #define LICENSE		"Dual BSD/GPL"
 
-#define DRIVER_NUM	6
-
 #define PIPE_SIZE		64
 #define MAX_THREADS		5
 
