@@ -296,6 +296,8 @@ static ssize_t shofer_read(struct file *filp, char __user *ubuf, size_t count,
 
 	simulate_delay(1000);
 
+	simulate_delay(1000);
+
 	dump_buffer("read-end", shofer, pipe);
 
 	pipe->reader_waiting = 0;
@@ -357,6 +359,8 @@ static ssize_t shofer_write(struct file *filp, const char __user *ubuf,
 	else
 		retval = copied;
 	LOG("Wrote %ld bytes\n", retval);
+
+	simulate_delay(1000);
 
 	simulate_delay(1000);
 
