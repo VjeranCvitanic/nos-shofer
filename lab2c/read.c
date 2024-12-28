@@ -15,7 +15,7 @@ int fp;
 
 void my_signal_handler(int sig)
 {
-	printf("Closing fd\n");
+	printf("Closing fd %d\n", fp);
 	close(fp);
 	printf("EXITING");
 	exit(0);

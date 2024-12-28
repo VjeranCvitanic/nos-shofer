@@ -231,7 +231,7 @@ static void pipe_delete(struct pipe *pipe)
 
     while (kfifo_len(&pipe->fifo) > 0) {
         len = kfifo_out(&pipe->fifo, buffer, sizeof(buffer));
-        LOG("Drained %zu bytes: %s\n", len, buffer);
+        printf("Drained %zu bytes: %s\n", len, buffer);
     }
 	kfifo_free(&pipe->fifo);
 }
