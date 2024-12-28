@@ -66,7 +66,7 @@ static struct file_operations shofer_fops = {
 /* init module */
 static int __init shofer_module_init(void)
 {
-	int retval, i;
+	int retval;
 	struct shofer_dev *shofer;
 	dev_t dev_no = 0;
 
@@ -235,6 +235,9 @@ static int shofer_release(struct inode *inode, struct file *filp)
 {
 	struct shofer_dev *shofer = filp->private_data;
 	shofer->pipe->thread_cnt--;
+
+	if(shofer->pipe->thread_cnt <= 0)
+		pipe_delete(shofer->pipe);
 
 	return 0;
 }
