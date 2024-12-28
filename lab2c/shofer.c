@@ -25,12 +25,6 @@
 
 #include "config.h"
 
-static int driver_num = DRIVER_NUM;	/* Number of drivers */
-
-/* Some parameters can be given at module load time */
-module_param(driver_num, int, S_IRUGO);
-MODULE_PARM_DESC(driver_num, "Number of devices to create");
-
 static int pipe_size = PIPE_SIZE;
 static int max_threads = MAX_THREADS;
 
@@ -79,7 +73,7 @@ static int __init shofer_module_init(void)
 	klog(KERN_NOTICE, "Module started initialization");
 
 	/* get device number(s) */
-	retval = alloc_chrdev_region(&dev_no, 0, driver_num, DRIVER_NAME);
+	retval = alloc_chrdev_region(&dev_no, 0, 1, DRIVER_NAME);
 	if (retval < 0) {
 		klog(KERN_WARNING, "Can't get major device number");
 		return retval;
@@ -94,13 +88,11 @@ static int __init shofer_module_init(void)
 	}
 
 	/* Create and add devices to the list */
-	for (i = 0; i < driver_num; i++) {
-		shofer = shofer_create(dev_no, &shofer_fops, NULL, &retval);
-		if (!shofer)
-			goto no_driver;
-		list_add_tail(&shofer->list, &shofers_list);
-		dev_no = MKDEV(MAJOR(dev_no), MINOR(dev_no) + 1);
-	}
+	shofer = shofer_create(dev_no, &shofer_fops, NULL, &retval);
+	if (!shofer)
+		goto no_driver;
+	list_add_tail(&shofer->list, &shofers_list);
+	dev_no = MKDEV(MAJOR(dev_no), MINOR(dev_no) + 1);
 
 	klog(KERN_NOTICE, "Module initialized with major=%d", MAJOR(dev_no));
 
@@ -122,7 +114,7 @@ static void cleanup(void)
 	}
 
 	if (Dev_no)
-		unregister_chrdev_region(Dev_no, driver_num);
+		unregister_chrdev_region(Dev_no, 1);
 }
 
 /* called when module exit */
