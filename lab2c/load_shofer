@@ -3,9 +3,18 @@ module="shofer"
 device="shofer"
 mode="666"
 
+echo "HERE 1"
+echo ""
+
 /sbin/insmod ./$module.ko || exit 1
 
+echo "HERE 2"
+echo ""
+
 major=$(awk "\$2==\"$module\" {print \$1}" /proc/devices)
+
+echo "HERE 3"
+echo ""
 
 rm -f /dev/${device}
 mknod /dev/${device}
