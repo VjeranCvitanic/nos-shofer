@@ -37,7 +37,7 @@ struct pipe {
 /* Device driver */
 struct shofer_dev {
 	dev_t dev_no;		/* device number */
-	struct pipe *pipe;		/* cijev */
+	struct pipe pipe;		/* cijev */
 	struct cdev cdev;	/* Char device structure */
 	struct list_head list;
 	int id;			/* id to differentiate drivers in prints */

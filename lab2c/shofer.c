@@ -87,12 +87,12 @@ static int __init shofer_module_init(void)
 	list_add_tail(&shofer->list, &shofers_list);
 	dev_no = MKDEV(MAJOR(dev_no), MINOR(dev_no) + 1);
 
-	/* initialize the pipe 
+	// initialize the pipe 
 	if (pipe_init(&shofer->pipe, pipe_size, max_threads)) {
 		kfree(shofer);
 		klog(KERN_ERR, "Cant init pipe");
 		return -1;
-	}*/
+	}
 
 	klog(KERN_NOTICE, "Module initialized with major=%d", MAJOR(dev_no));
 
@@ -167,10 +167,10 @@ static int shofer_open(struct inode *inode, struct file *filp)
 	struct shofer_dev *shofer;
     shofer = container_of(inode->i_cdev, struct shofer_dev, cdev);
 
-	if (shofer->pipe->thread_cnt >= shofer->pipe->max_threads)
+	if (shofer->pipe.thread_cnt >= shofer->pipe.max_threads)
 		return -EBUSY;
 
-	shofer->pipe->thread_cnt++;
+	shofer->pipe.thread_cnt++;
 
 	filp->private_data = shofer;
 
@@ -234,10 +234,10 @@ static void pipe_delete(struct pipe *pipe)
 static int shofer_release(struct inode *inode, struct file *filp)
 {
 	struct shofer_dev *shofer = filp->private_data;
-	shofer->pipe->thread_cnt--;
+	shofer->pipe.thread_cnt--;
 
-	if(shofer->pipe->thread_cnt <= 0)
-		pipe_delete(shofer->pipe);
+	if(shofer->pipe.thread_cnt <= 0)
+		pipe_delete(&shofer->pipe);
 
 	return 0;
 }
@@ -248,7 +248,7 @@ static ssize_t shofer_read(struct file *filp, char __user *ubuf, size_t count,
 {
 	ssize_t retval = 0;
 	struct shofer_dev *shofer = filp->private_data;
-	struct pipe *pipe = shofer->pipe;
+	struct pipe *pipe = &shofer->pipe;
 	struct kfifo *fifo = &pipe->fifo;
 	unsigned int copied;
  
@@ -312,7 +312,7 @@ static ssize_t shofer_write(struct file *filp, const char __user *ubuf,
 {
 	ssize_t retval = 0;
 	struct shofer_dev *shofer = filp->private_data;
-	struct pipe *pipe = shofer->pipe;
+	struct pipe *pipe = &shofer->pipe;
 	struct kfifo *fifo = &pipe->fifo;
 	unsigned int copied;
  
