@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-	fp = open(RED, O_WRONLY | O_NONBLOCK);
+	fp = open(RED, O_WRONLY);
 	if (fp == -1) {
 		perror("Nisam otvorio cjevovod! Greska: ");
 		return -1;
