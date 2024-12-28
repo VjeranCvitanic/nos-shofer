@@ -94,7 +94,7 @@ static int __init shofer_module_init(void)
 		return -1;
 	}
 
-	klog(KERN_NOTICE, "Module initialized with major=%d", MAJOR(dev_no));*/
+	klog(KERN_NOTICE, "Module initialized with major=%d", MAJOR(dev_no));
 
 	return 0;
 
