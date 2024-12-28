@@ -252,7 +252,7 @@ static ssize_t shofer_read(struct file *filp, char __user *ubuf, size_t count,
 	struct kfifo *fifo = &pipe->fifo;
 	unsigned int copied;
  
-	if (!( (filp->f_flags & O_ACCMODE) & O_RDONLY))
+	if (!( (filp->f_flags & O_ACCMODE) == O_RDONLY))
 	{
 		LOG("Wrong mode on pipe. File flags: %lx", filp->f_flags);  // Debugging output
 		return -EPERM;
@@ -316,7 +316,7 @@ static ssize_t shofer_write(struct file *filp, const char __user *ubuf,
 	struct kfifo *fifo = &pipe->fifo;
 	unsigned int copied;
  
-	if (!((filp->f_flags & O_ACCMODE) & O_WRONLY))
+	if (!((filp->f_flags & O_ACCMODE) == O_WRONLY))
 	{
 		LOG("Wrong mode on pipe. File flags: %lx", filp->f_flags);  // Debugging output
 		return -EPERM;
