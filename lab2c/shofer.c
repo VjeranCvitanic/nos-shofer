@@ -81,7 +81,7 @@ static int __init shofer_module_init(void)
 	Dev_no = dev_no; //remember first
 
     /* initialize the pipe */
-	/*if (pipe_init(shofer->pipe, pipe_size, max_threads)) {
+	if (pipe_init(shofer->pipe, pipe_size, max_threads)) {
 		kfree(shofer);
 		klog(KERN_ERR, "Cant init pipe");
 		return -1;
