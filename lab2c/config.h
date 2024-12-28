@@ -16,12 +16,12 @@
 #define AUTHOR		"Leonardo Jelenkovic"
 #define LICENSE		"Dual BSD/GPL"
 
-#define BUFFER_SIZE	64
-#define BUFFER_NUM	6
 #define DRIVER_NUM	6
 
 #define PIPE_SIZE		64
 #define MAX_THREADS		5
+
+#define SHOFER_DEBUG
 
 struct pipe {
 	size_t pipe_size;
